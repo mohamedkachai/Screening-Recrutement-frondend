@@ -62,23 +62,15 @@ function HRDashboard({ user }) {
     const { t } = useTranslation();
     const [offers, setOffers] = useState([]);
     const [attempts, setAttempts] = useState([]);
-    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function load() {
-            try {
-                const [o, a, u] = await Promise.all([
-                    listOffers(),
-                    listAllAttempts(),
-                    listUsers(),
-                ]);
-                setOffers(o.data.offers ?? []);
-                setAttempts(a.data.attempts ?? []);
-                setUsers(u.data.users ?? []);
-            } finally {
-                setLoading(false);
-            }
+            // Resilient load: one failing call must not blank the whole dashboard.
+            const [o, a] = await Promise.allSettled([listOffers(), listAllAttempts()]);
+            if (o.status === 'fulfilled') setOffers(o.value.data.offers ?? []);
+            if (a.status === 'fulfilled') setAttempts(a.value.data.attempts ?? []);
+            setLoading(false);
         }
         load();
     }, []);
@@ -147,9 +139,8 @@ function HRDashboard({ user }) {
                     { title: t('home.openOffers'), value: offers.filter((o) => o.status === OFFER_STATUSES.OPEN).length, icon: <CheckCircleOutlined />, color: '#52c41a', onClick: () => navigate('/offers') },
                     { title: t('home.totalAttempts'), value: attempts.length, icon: <SolutionOutlined />, color: '#722ed1', onClick: () => navigate('/results') },
                     { title: t('home.pendingReview'), value: pendingGrade, icon: <ClockCircleOutlined />, color: '#fa8c16', onClick: () => navigate('/results') },
-                    { title: t('home.totalUsers'), value: users.length, icon: <TeamOutlined />, color: '#13c2c2', onClick: () => navigate('/user/list') },
                 ].map((card) => (
-                    <Col key={card.title} xs={12} sm={8} md={8} lg={4} xl={4}>
+                    <Col key={card.title} xs={12} sm={12} md={6} lg={6} xl={6}>
                         <Card
                             hoverable
                             onClick={card.onClick}
@@ -498,12 +489,171 @@ function CandidateDashboard({ user }) {
     );
 }
 
+// ── Admin dashboard ──────────────────────────────────────────────────────────
+
+const ATTEMPT_BAR_COLORS = {
+    [ATTEMPT_STATUSES.NOT_STARTED]: '#8c8c8c',
+    [ATTEMPT_STATUSES.IN_PROGRESS]: '#faad14',
+    [ATTEMPT_STATUSES.SUBMITTED]: '#1677ff',
+    [ATTEMPT_STATUSES.GRADED]: '#52c41a',
+    [ATTEMPT_STATUSES.EXPIRED]: '#ff4d4f',
+};
+
+function AdminDashboard({ user }) {
+    const navigate = useNavigate();
+    const { t } = useTranslation();
+    const [attempts, setAttempts] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            const [a, u] = await Promise.allSettled([listAllAttempts(), listUsers()]);
+            if (a.status === 'fulfilled') setAttempts(a.value.data.attempts ?? []);
+            if (u.status === 'fulfilled') setUsers(u.value.data.users ?? []);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
+    const pendingGrade = useMemo(
+        () => attempts.filter((a) => a.status === ATTEMPT_STATUSES.SUBMITTED).length,
+        [attempts],
+    );
+
+    const attemptBarData = useMemo(
+        () =>
+            Object.values(ATTEMPT_STATUSES)
+                .map((s) => ({
+                    name: s.replace('_', ' '),
+                    count: attempts.filter((a) => a.status === s).length,
+                    fill: ATTEMPT_BAR_COLORS[s],
+                }))
+                .filter((d) => d.count > 0),
+        [attempts],
+    );
+
+    const recentUsers = useMemo(
+        () => [...users].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6),
+        [users],
+    );
+
+    if (loading) {
+        return (
+            <div style={{ textAlign: 'center', padding: 80 }}>
+                <Spin size="large" />
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div>
+                <Title level={3} style={{ margin: 0 }}>
+                    {t('home.welcomeBack', { name: user?.firstName })} 👋
+                </Title>
+                <Text type="secondary">{t('home.adminSubtitle')}</Text>
+            </div>
+
+            <Row gutter={[16, 16]}>
+                {[
+                    { title: t('home.totalUsers'), value: users.length, icon: <TeamOutlined />, color: '#13c2c2', onClick: () => navigate('/user/list') },
+                    { title: t('home.totalAttempts'), value: attempts.length, icon: <SolutionOutlined />, color: '#722ed1', onClick: () => navigate('/results') },
+                    { title: t('home.pendingReview'), value: pendingGrade, icon: <ClockCircleOutlined />, color: '#fa8c16', onClick: () => navigate('/results') },
+                ].map((card) => (
+                    <Col key={card.title} xs={24} sm={8}>
+                        <Card
+                            hoverable
+                            onClick={card.onClick}
+                            style={{ borderRadius: 12, cursor: 'pointer' }}
+                            styles={{ body: { padding: '16px 20px' } }}
+                        >
+                            <div
+                                style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 8,
+                                    background: card.color + '1a',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: 18,
+                                    color: card.color,
+                                    marginBottom: 12,
+                                }}
+                            >
+                                {card.icon}
+                            </div>
+                            <Statistic
+                                title={<span style={{ fontSize: 12 }}>{card.title}</span>}
+                                value={card.value}
+                                valueStyle={{ fontSize: 28, fontWeight: 700, color: card.color }}
+                            />
+                        </Card>
+                    </Col>
+                ))}
+            </Row>
+
+            <Card title={t('home.attemptsByStatus')} style={{ borderRadius: 12 }}>
+                {attemptBarData.length === 0 ? (
+                    <Text type="secondary">{t('home.noAttemptData')}</Text>
+                ) : (
+                    <ResponsiveContainer width="100%" height={240}>
+                        <BarChart data={attemptBarData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                            <Tooltip />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                {attemptBarData.map((entry) => (
+                                    <Cell key={entry.name} fill={entry.fill} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                )}
+            </Card>
+
+            <Card
+                title={t('home.recentUsers')}
+                style={{ borderRadius: 12 }}
+                extra={
+                    <Button type="link" onClick={() => navigate('/user/list')} icon={<RightOutlined />}>
+                        {t('common.viewAll')}
+                    </Button>
+                }
+            >
+                <List
+                    dataSource={recentUsers}
+                    locale={{ emptyText: t('common.noData') }}
+                    renderItem={(u) => (
+                        <List.Item
+                            style={{ cursor: 'pointer', padding: '10px 0' }}
+                            onClick={() => navigate(`/user/edit/${u._id}`)}
+                            extra={<Tag color="geekblue">{u.role}</Tag>}
+                        >
+                            <List.Item.Meta
+                                avatar={
+                                    <Avatar style={{ background: '#13c2c21a', color: '#13c2c2' }} icon={<TeamOutlined />} />
+                                }
+                                title={<span style={{ fontWeight: 600 }}>{u.firstName} {u.lastName}</span>}
+                                description={<span style={{ fontSize: 12 }}>{u.email}</span>}
+                            />
+                        </List.Item>
+                    )}
+                />
+            </Card>
+        </div>
+    );
+}
+
 // ── Root ─────────────────────────────────────────────────────────────────────
 
 function Home() {
     const { user, isAdmin, isHR, isReviewer, isCandidate } = useContext(AuthContext);
 
-    if (isAdmin || isHR) return <HRDashboard user={user} />;
+    if (isAdmin) return <AdminDashboard user={user} />;
+    if (isHR) return <HRDashboard user={user} />;
     if (isReviewer) return <ReviewerDashboard user={user} />;
     if (isCandidate) return <CandidateDashboard user={user} />;
 

@@ -1,7 +1,9 @@
-import { Button, Col, Divider, Form, Input, message, Row } from 'antd';
+import { Button, Col, Form, Input, message, Row } from 'antd';
+import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUp } from '../api/auth';
+import AuthLayout from '../layouts/AuthLayout';
 
 function SignUp() {
     const navigate = useNavigate();
@@ -18,59 +20,52 @@ function SignUp() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', width: '100%' }}>
-            <Row justify="center" align="middle" style={{ height: '100vh' }}>
-                <Col span={8} style={{ borderRadius: '13px', backgroundColor: '#FAFAFA', padding: 24, boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-                    <Divider>{t('auth.signUp')}</Divider>
-                    <Form layout="vertical" onFinish={onFinish}>
-                        <Row gutter={12}>
-                            <Col span={12}>
-                                <Form.Item label={t('common.firstName')} name="firstName" rules={[{ required: true, message: t('common.required') }]}>
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item label={t('common.lastName')} name="lastName" rules={[{ required: true, message: t('common.required') }]}>
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                        <Form.Item label={t('common.email')} name="email" rules={[{ required: true, type: 'email', message: t('auth.emailRequired') }]}>
-                            <Input />
+        <AuthLayout title={t('auth.signUp')} subtitle={t('auth.signupSubtitle')}>
+            <Form layout="vertical" size="large" onFinish={onFinish} requiredMark={false}>
+                <Row gutter={12}>
+                    <Col span={12}>
+                        <Form.Item label={t('common.firstName')} name="firstName" rules={[{ required: true, message: t('common.required') }]}>
+                            <Input prefix={<UserOutlined />} />
                         </Form.Item>
-                        <Form.Item label={t('common.password')} name="password" rules={[{ required: true, min: 8, message: t('auth.passwordRequired') }]}>
-                            <Input.Password />
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item label={t('common.lastName')} name="lastName" rules={[{ required: true, message: t('common.required') }]}>
+                            <Input prefix={<UserOutlined />} />
                         </Form.Item>
-                        <Form.Item
-                            label={t('auth.confirmPassword')}
-                            name="confirmPassword"
-                            dependencies={['password']}
-                            rules={[
-                                { required: true, message: t('common.required') },
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        if (!value || getFieldValue('password') === value) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject(new Error(t('auth.passwordsMustMatch')));
-                                    },
-                                }),
-                            ]}
-                        >
-                            <Input.Password />
-                        </Form.Item>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                            <Button type="primary" htmlType="submit" block>
-                                {t('auth.signUp')}
-                            </Button>
-                            <div style={{ textAlign: 'center' }}>
-                                {t('auth.alreadyHaveAccount')} <Link to="/login">{t('auth.login')}</Link>
-                            </div>
-                        </div>
-                    </Form>
-                </Col>
-            </Row>
-        </div>
+                    </Col>
+                </Row>
+                <Form.Item label={t('common.email')} name="email" rules={[{ required: true, type: 'email', message: t('auth.emailRequired') }]}>
+                    <Input prefix={<MailOutlined />} placeholder="you@example.com" />
+                </Form.Item>
+                <Form.Item label={t('common.password')} name="password" rules={[{ required: true, min: 8, message: t('auth.passwordRequired') }]}>
+                    <Input.Password prefix={<LockOutlined />} placeholder="••••••••" />
+                </Form.Item>
+                <Form.Item
+                    label={t('auth.confirmPassword')}
+                    name="confirmPassword"
+                    dependencies={['password']}
+                    rules={[
+                        { required: true, message: t('common.required') },
+                        ({ getFieldValue }) => ({
+                            validator(_, value) {
+                                if (!value || getFieldValue('password') === value) {
+                                    return Promise.resolve();
+                                }
+                                return Promise.reject(new Error(t('auth.passwordsMustMatch')));
+                            },
+                        }),
+                    ]}
+                >
+                    <Input.Password prefix={<LockOutlined />} placeholder="••••••••" />
+                </Form.Item>
+                <Button type="primary" htmlType="submit" block>
+                    {t('auth.signUp')}
+                </Button>
+                <div style={{ textAlign: 'center', marginTop: 16 }}>
+                    {t('auth.alreadyHaveAccount')} <Link to="/login">{t('auth.login')}</Link>
+                </div>
+            </Form>
+        </AuthLayout>
     );
 }
 

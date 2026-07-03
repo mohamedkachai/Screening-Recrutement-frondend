@@ -87,7 +87,8 @@ function MainLayout() {
         const list = [
             { key: 'home', icon: <HomeOutlined />, label: link(t('nav.home'), '/') },
         ];
-        if (isAdmin || isHR) {
+        // Offers / Tests / Invitations are HR-managed. Admin focuses on users & oversight.
+        if (isHR) {
             list.push({ key: 'offers', icon: <FileTextOutlined />, label: link(t('nav.offers'), '/offers') });
             list.push({ key: 'tests', icon: <FileSearchOutlined />, label: link(t('nav.tests'), '/tests') });
             list.push({ key: 'invitations', icon: <MailOutlined />, label: link(t('nav.invitations'), '/invitations') });
