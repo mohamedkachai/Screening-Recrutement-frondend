@@ -95,7 +95,7 @@ const MyApplications = () => {
                     );
                 }
                 if (att.status === ATTEMPT_STATUSES.SUBMITTED) {
-                    return <Tag color="blue">{t('applications.awaitingReview')}</Tag>;
+                    return <Tag color="gold">{t('applications.pendingReview')}</Tag>;
                 }
                 if (att.status === ATTEMPT_STATUSES.EXPIRED) {
                     return <Tag color="red">{t('applications.expired')}</Tag>;

@@ -314,7 +314,19 @@
         "result": "Result",
         "awaitingReview": "Awaiting review",
         "expired": "Expired",
-        "exportReport": "Export my report (PDF)"
+        "exportReport": "Export my report (PDF)",
+        "pendingReview": "Pending review",
+        "notTaken": "Not taken",
+        "decision": "Decision",
+        "hire": "Hire",
+        "reject": "Reject",
+        "hireConfirm": "Hire {{name}} for this position?",
+        "hireBlockedPending": "Result is pending manual review — grade the attempt before hiring.",
+        "totalCount": "{{n}} applicant(s)",
+        "hiredCount": "{{n}} hired",
+        "inProgress": "In progress",
+        "downloadResult": "Download result (PDF)",
+        "noResultYet": "No result to download yet"
     },
     "attempts": {
         "title": "Attempts — {{offerTitle}}",

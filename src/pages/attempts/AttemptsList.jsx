@@ -108,7 +108,7 @@ const AttemptsList = () => {
                 {t('offers.backToOffers')}
             </Button>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4>{t('attempts.title')} {offer && `— ${offer.title}`}</h4>
+                <h4>{t('nav.attempts')}{offer ? ` — ${offer.title}` : ''}</h4>
                 <Button
                     icon={<DownloadOutlined />}
                     onClick={() => downloadOfferRecap(offerId).catch((err) => message.error(err?.response?.data?.message || t('common.downloadError')))}

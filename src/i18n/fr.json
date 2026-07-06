@@ -314,7 +314,19 @@
         "result": "Résultat",
         "awaitingReview": "En attente de correction",
         "expired": "Expiré",
-        "exportReport": "Exporter mon rapport (PDF)"
+        "exportReport": "Exporter mon rapport (PDF)",
+        "pendingReview": "En attente de correction",
+        "notTaken": "Non passé",
+        "decision": "Décision",
+        "hire": "Recruter",
+        "reject": "Rejeter",
+        "hireConfirm": "Recruter {{name}} pour ce poste ?",
+        "hireBlockedPending": "Le résultat est en attente de correction — corrigez la tentative avant de recruter.",
+        "totalCount": "{{n}} candidat(s)",
+        "hiredCount": "{{n}} recruté(s)",
+        "inProgress": "En cours",
+        "downloadResult": "Télécharger le résultat (PDF)",
+        "noResultYet": "Aucun résultat à télécharger pour l'instant"
     },
     "attempts": {
         "title": "Tentatives — {{offerTitle}}",
